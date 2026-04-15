@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Visual Auditor Pro</title>
+    
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #ea580c;
+            --primary-hover: #c2410c;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Centered Header Section */
+        header {
+            width: 100%;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 3rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .logo-area h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+            color: var(--primary);
+            font-weight: 800;
+            letter-spacing: -0.05em;
+        }
+
+        .logo-area p {
+            margin: 0 0 2.5rem 0;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        /* Controls Grid - Centered */
+        .controls-card {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 2rem;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .file-input-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            text-align: left;
+        }
+
+        .file-input-wrapper label {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px dashed var(--border);
+            border-radius: 0.5rem;
+            background: var(--bg);
+            cursor: pointer;
+        }
+
+        /* Action Buttons Area */
+        .action-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            width: 100%;
+            justify-content: center;
+        }
+
+        button {
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #run-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            flex: 2;
+            max-width: 250px;
+            justify-content: center;
+        }
+
+        #run-btn:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(234, 88, 12, 0.3);
+        }
+
+        #reset-btn {
+            background-color: white;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            flex: 1;
+            max-width: 150px;
+            justify-content: center;
+        }
+
+        #reset-btn:hover {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+            border-color: var(--text-muted);
+        }
+
+        button:disabled {
+            background-color: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        #status-text {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* Results Layout */
+        main {
+            width: 100%;
+            max-width: 1200px;
+            padding: 3rem 1.5rem;
+            box-sizing: border-box;
+        }
+
+        #summary-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .stat-card .value { font-size: 2rem; font-weight: 800; }
+        .stat-card .label { font-size: 0.875rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+
+        /* Page Result Cards */
+        .page-card {
+            background: white;
+            border-radius: 1.25rem;
+            border: 1px solid var(--border);
+            margin-bottom: 4rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-header {
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .page-header.has-diff { background-color: #fff7ed; border-bottom: 1px solid #ffedd5; }
+        .page-header.no-diff { background-color: #f0fdf4; border-bottom: 1px solid #dcfce7; }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        .badge-danger { background: #ffedd5; color: #9a3412; }
+        .badge-success { background: #dcfce7; color: #166534; }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            background: var(--border);
+            gap: 1px;
+        }
+
+        .canvas-box {
+            background: white;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .canvas-box h4 {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin: 0 0 1.5rem 0;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        canvas {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 0 0 1px var(--border);
+        }
+
+        @media (max-width: 850px) {
+            .upload-grid, .comparison-grid, #summary-stats { grid-template-columns: 1fr; }
+            .button-group { flex-direction: column; align-items: center; }
+            #run-btn, #reset-btn { max-width: 100%; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <h1>PDF AUDITOR</h1>
+            <p>High-precision visual comparison tool for PDF updates.</p>
+        </div>
+        
+        <div class="controls-card">
+            <div class="upload-grid">
+                <div class="file-input-wrapper">
+                    <label>OLD PDF (ORIGINAL)</label>
+                    <input type="file" id="old-file" accept="application/pdf">
+                </div>
+                <div class="file-input-wrapper">
+                    <label>NEW PDF (UPDATED)</label>
+                    <input type="file" id="new-file" accept="application/pdf">
+                </div>
+            </div>
+
+            <div class="action-area">
+                <div class="button-group">
+                    <button id="run-btn">Run Comparison</button>
+                    <button id="reset-btn">Reset</button>
+                </div>
+                <div id="status-text">Ready to compare</div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div id="summary-stats"></div>
+        <div id="results-list"></div>
+    </main>
+
+<script>
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+    const runBtn = document.getElementById('run-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const oldInput = document.getElementById('old-file');
+    const newInput = document.getElementById('new-file');
+    const resultsList = document.getElementById('results-list');
+    const statusText = document.getElementById('status-text');
+    const statsContainer = document.getElementById('summary-stats');
+
+    // RESET FUNCTIONALITY
+    resetBtn.onclick = () => {
+        oldInput.value = "";
+        newInput.value = "";
+        resultsList.innerHTML = "";
+        statsContainer.innerHTML = "";
+        statusText.innerText = "Ready to compare";
+        runBtn.disabled = false;
+        console.log("Tool reset.");
+    };
+
+    runBtn.onclick = async () => {
+        const f1 = oldInput.files[0];
+        const f2 = newInput.files[0];
+        if(!f1 || !f2) return alert("Please upload both files.");
+
+        runBtn.disabled = true;
+        resultsList.innerHTML = "";
+        statsContainer.innerHTML = "";
+        let totalDiffs = 0;
+
+        try {
+            const oldPdf = await loadPdf(f1);
+            const newPdf = await loadPdf(f2);
+            const maxPages = Math.max(oldPdf.numPages, newPdf.numPages);
+
+            for(let i=1; i<=maxPages; i++) {
+                statusText.innerText = `Analyzing Page ${i} of ${maxPages}...`;
+                const changed = await comparePage(oldPdf, newPdf, i);
+                if (changed) totalDiffs++;
+            }
+
+            statusText.innerText = "Audit Finished";
+            renderStats(maxPages, totalDiffs);
+        } catch (err) {
+            statusText.innerText = "Error encountered.";
+            console.error(err);
+            runBtn.disabled = false;
+        }
+    };
+
+    async function loadPdf(file) {
+        const data = await file.arrayBuffer();
+        return await pdfjsLib.getDocument({data}).promise;
+    }
+
+    async function comparePage(oldPdf, newPdf, pageNum) {
+        if (pageNum > oldPdf.numPages || pageNum > newPdf.numPages) {
+            appendMissingPageNotice(pageNum);
+            return true;
+        }
+
+        const scale = 1.8; 
+        const p1 = await oldPdf.getPage(pageNum);
+        const viewport = p1.getViewport({scale});
+
+        const cOld = document.createElement('canvas');
+        const cNew = document.createElement('canvas');
+        const cDiff = document.createElement('canvas');
+        [cOld, cNew, cDiff].forEach(c => { c.width = viewport.width; c.height = viewport.height; });
+
+        await p1.render({canvasContext: cOld.getContext('2d'), viewport}).promise;
+        const p2 = await newPdf.getPage(pageNum);
+        await p2.render({canvasContext: cNew.getContext('2d'), viewport}).promise;
+
+        const ctx1 = cOld.getContext('2d');
+        const ctx2 = cNew.getContext('2d');
+        const ctxD = cDiff.getContext('2d');
+
+        const img1 = ctx1.getImageData(0,0, viewport.width, viewport.height);
+        const img2 = ctx2.getImageData(0,0, viewport.width, viewport.height);
+        const imgD = ctxD.createImageData(viewport.width, viewport.height);
+
+        let diffPixels = 0;
+        let firstIdx = null;
+
+        for (let i = 0; i < img1.data.length; i += 4) {
+            const rD = Math.abs(img1.data[i] - img2.data[i]);
+            const gD = Math.abs(img1.data[i+1] - img2.data[i+1]);
+            const bD = Math.abs(img1.data[i+2] - img2.data[i+2]);
+
+            if (rD > 25 || gD > 25 || bD > 25) {
+                diffPixels++;
+                if (firstIdx === null) firstIdx = (i/4);
+                imgD.data[i] = 234; imgD.data[i+1] = 88; imgD.data[i+2] = 12; imgD.data[i+3] = 255;
+            } else {
+                imgD.data[i] = img1.data[i]; imgD.data[i+1] = img1.data[i+1]; imgD.data[i+2] = img1.data[i+2]; imgD.data[i+3] = 40;
+            }
+        }
+        ctxD.putImageData(imgD, 0, 0);
+
+        if (diffPixels > 0) {
+            const x = firstIdx % viewport.width;
+            const y = Math.floor(firstIdx / viewport.width);
+            ctxD.strokeStyle = "#ea580c";
+            ctxD.lineWidth = 4;
+            ctxD.beginPath(); ctxD.arc(x, y, 60, 0, 2 * Math.PI); ctxD.stroke();
+        }
+
+        renderPageCard(pageNum, cOld, cDiff, cNew, diffPixels);
+        return diffPixels > 0;
+    }
+
+    function renderPageCard(num, c1, cd, c2, count) {
+        const hasDiff = count > 0;
+        const card = document.createElement('div');
+        card.className = 'page-card';
+        card.innerHTML = `
+            <div class="page-header ${hasDiff ? 'has-diff' : 'no-diff'}">
+                <span style="font-weight:800">PAGE ${num}</span>
+                <span class="status-badge ${hasDiff ? 'badge-danger' : 'badge-success'}">
+                    ${hasDiff ? count + ' Pixels Changed' : 'No Changes Detected'}
+                </span>
+            </div>
+            <div class="comparison-grid">
+                <div class="canvas-box"><h4>Original</h4></div>
+                <div class="canvas-box"><h4>Comparison View</h4></div>
+                <div class="canvas-box"><h4>New Version</h4></div>
+            </div>
+        `;
+        const b = card.querySelectorAll('.canvas-box');
+        b[0].appendChild(c1); b[1].appendChild(cd); b[2].appendChild(c2);
+        resultsList.appendChild(card);
+    }
+
+    function renderStats(total, changed) {
+        statsContainer.innerHTML = `
+            <div class="stat-card"><div class="label">Total Pages</div><div class="value">${total}</div></div>
+            <div class="stat-card"><div class="label">Modified</div><div class="value" style="color:var(--danger)">${changed}</div></div>
+            <div class="stat-card"><div class="label">Status</div><div class="value" style="color:${changed===0?'var(--success)':'var(--primary)'}">${changed===0?'PASS':'REVIEW'}</div></div>
+        `;
+    }
+
+    function appendMissingPageNotice(num) {
+        const div = document.createElement('div');
+        div.className = 'page-card';
+        div.innerHTML = `<div class="page-header has-diff"><span style="font-weight:800">PAGE ${num}</span><span class="status-badge badge-danger">Page missing in one version</span></div>`;
+        resultsList.appendChild(div);
+    }
+</script>
+</body>
+</html>

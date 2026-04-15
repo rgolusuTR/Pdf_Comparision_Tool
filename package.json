@@ -1,0 +1,36 @@
+{
+  "name": "pdf_comparison_tool",
+  "version": "1.0.0",
+  "description": "Client-side PDF comparison tool built with Next.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint ."
+  },
+  "keywords": [
+    "nextjs",
+    "pdf",
+    "comparison",
+    "frontend"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "diff": "^9.0.0",
+    "next": "^16.2.3",
+    "pdfjs-dist": "^5.6.205",
+    "pixelmatch": "^7.1.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.2",
+    "autoprefixer": "^10.5.0",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.3",
+    "postcss": "^8.5.9",
+    "tailwindcss": "^4.2.2"
+  }
+}
